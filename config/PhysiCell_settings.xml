@@ -14,7 +14,7 @@
 	</domain>
 	<overall>
 		<max_time
-			units="min">120</max_time>
+			units="min">360</max_time>
 		<time_units>min</time_units>
 		<space_units>micron</space_units>
 		<dt_diffusion
@@ -272,7 +272,7 @@
 				<motility>
 					<speed>1</speed>
 					<persistence_time>1</persistence_time>
-					<migration_bias>.5</migration_bias>
+					<migration_bias>.2</migration_bias>
 					<options>
 						<enabled>true</enabled>
 						<enabled>false</enabled>
@@ -304,17 +304,18 @@
 				<cell_plasticity>0.0000</cell_plasticity>
 				<cell_ID>0.0</cell_ID>
 				<relative_adhesion_other_cell_types>1</relative_adhesion_other_cell_types>
-				<relative_adhesion_other_cells>0.0</relative_adhesion_other_cells>
+				<relative_adhesion_other_cells>0.2</relative_adhesion_other_cells>
 				<attach_to_BM units="dimensionless">0.0</attach_to_BM> 
 				<attach_lifetime units="min">1.0</attach_lifetime> 
 				<attach_time units="min">0.0</attach_time> 
 				<elastic_const units="dimensionless">0.0</elastic_const> 
 				<attach_BM_x units="micron">0.0</attach_BM_x> 
 				<attach_BM_y units="micron">0.0</attach_BM_y>
-				<subcell_adhesion_factor>1.8</subcell_adhesion_factor>
-				<subcell_repulsion_factor>7.2</subcell_repulsion_factor>
-				<membrane_adhesion_factor>0.06</membrane_adhesion_factor>
-				<membrane_repulsion_factor>0.01</membrane_repulsion_factor>
+				<subcell_adhesion_factor>1</subcell_adhesion_factor>
+				<subcell_repulsion_factor>1</subcell_repulsion_factor>
+				<membrane_adhesion_factor>0.2</membrane_adhesion_factor>
+				<membrane_repulsion_factor>0.0</membrane_repulsion_factor>
+				<spring_break_push>-0.0</spring_break_push>
 			</custom_data>
 		</cell_definition>
 	</cell_definitions>
@@ -338,6 +339,6 @@
 		<mechanics_voxel_size
 			type="double"
 			units="micron"
-			description="edge length of mechanics voxel. Set ~2 x agent radius x max relative interaction distance (default: 30)">15</mechanics_voxel_size>
+			description="edge length of mechanics voxel. Set ~2 x agent radius x max relative interaction distance (default: 30)">30</mechanics_voxel_size>
 	</user_parameters>
 </PhysiCell_settings>
