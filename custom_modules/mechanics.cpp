@@ -175,67 +175,6 @@ void add_spring_potentials(Cell* my_cell, Cell* other_agent)
 	temp_r /= distance;
 	// multiply the temp_r value with velocity and add it to displacement, put it back in displacement
 	axpy( &(my_cell->velocity) , temp_r , my_cell->displacement ); 
-
-	static int attach_to_BM_i = my_cell->custom_data.find_variable_index( "attach_to_BM" ); 
-	// if different type or same cell, return
-	// if (my_cell == other_agent) //|| my_cell->type != other_agent -> type) 
-	// {
-
-	// 	return;
-	// }
-	
-	// if the other agent is not spring linked, return
-	// if (other_agent->custom_data[attach_to_BM_i] == 0.0)
-	// {
-	// 	return;
-	// }
-
-	// If the other agent is closer to membrane than current cell, then return
-	int pbmIndex = microenvironment.find_density_index("pbm");
-	int vi_myCell = microenvironment.nearest_voxel_index(my_cell->position);
-	int vi_otherCell = microenvironment.nearest_voxel_index(other_agent->position);
-
-	double signed_dist_myCell = microenvironment.density_vector(vi_myCell).at(pbmIndex);
-	double signed_dist_otherCell = microenvironment.density_vector(vi_otherCell).at(pbmIndex);
-
-	if ((signed_dist_myCell > 0 ) || (signed_dist_otherCell > 0))
-	{
-		return;
-	}
-
-	// if (std::abs(signed_dist_otherCell) < std::abs(signed_dist_myCell))
-	// {
-	// 	return;
-	// }
-
-	// std::cout << "reached the potential part for cell " << my_cell->ID ;
-	// std::cout << " curr sd = " << signed_dist_myCell << " " << "other sd = " << signed_dist_otherCell << std::endl;
-	// double distance = 0; 
-	// for( int i = 0 ; i < 3 ; i++ ) 
-	// { 
-	// 	// find distance between cells 
-	// 	my_cell->displacement[i] = my_cell->position[i] - (*other_agent).position[i]; 
-	// 	distance += (my_cell->displacement[i]) * (my_cell->displacement[i]); 
-	// }
-
-	// distance = std::max(sqrt(distance), 0.00001); 
-	// double R = my_cell->phenotype.geometry.radius + (*other_agent).phenotype.geometry.radius; 
-
-	// double temp_r;
-	// if( distance < R ) 
-	// {
-
-		// temp_r = -distance; // -d
-		// temp_r /= R; // -d/R
-		// temp_r += 1.0; // 1-d/R
-		// temp_r *= temp_r; // (1-d/R)^2 
-		// // temp_r /= 2;
-
-		// // push the current cell away
-		// // disabling force due to linkage
-		
-		// axpy(&(my_cell->velocity), temp_r, my_cell->displacement);
-	// }
 	return;
 }
 
@@ -417,19 +356,6 @@ void heterotypic_update_cell_velocity( Cell* pCell, Phenotype& phenotype, double
 void BM_special_mechanics( Cell* pCell, Phenotype& phenotype, double dt )
 {
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	return; 
 }
 
@@ -461,22 +387,12 @@ void custom_cell_update_mechanics( Cell* pCell , Phenotype& phenotype , double d
     static int attach_time_i = pCell->custom_data.find_variable_index( "attach_time" ); 
     static int attach_to_BM_i = pCell->custom_data.find_variable_index( "attach_to_BM" ); 
 
-	
-    // cap letters (X,N, etc) represent vectors
-    // Agent vars:
-    //   position = X
-    //   radius = r
-    //   adhesion radius = r_A
-    // if (pCell->ID == 4)
-    // {
-    //     std::cout << " ID = 4, phenotype.geometry.radius = " << phenotype.geometry.radius << std::endl;
-    // }
-
     double adhesion_radius = phenotype.geometry.radius * phenotype.mechanics.relative_maximum_adhesion_distance;
-	adhesion_radius = phenotype.geometry.radius * 2;
+	adhesion_radius = phenotype.geometry.radius * 3;
     int ncells_attached = 0;
 	double temp_r;
-	double R = pCell->phenotype.geometry.radius * 2;
+	double temp_a;
+	double R = pCell->phenotype.geometry.radius * 1.5;
 
 	int pbmIndex = microenvironment.find_density_index("pbm");
 	int n_x_index = microenvironment.find_density_index("n_x");
@@ -506,7 +422,7 @@ void custom_cell_update_mechanics( Cell* pCell , Phenotype& phenotype , double d
     //   attach
     //===================================
 
-	if (PhysiCell_globals.current_time > 6)
+	if (PhysiCell_globals.current_time > 2)
 	{
 		phenotype.motility.is_motile = false;
 	}
@@ -515,19 +431,30 @@ void custom_cell_update_mechanics( Cell* pCell , Phenotype& phenotype , double d
 	{
 		if (displacement < 0) 
 		{	
-			temp_r = displacement * 0.001; // d
-			temp_r /= adhesion_radius; // d/R
-			temp_r += 1.0; // 1-d/R 
-			temp_r *= temp_r; // (1-d/R)^2 
-			temp_r *= membrane_adhesion_factor;
+			temp_a = displacement; // d
+			temp_a /= adhesion_radius; // d/Ra
+			temp_a += 1.0; // 1-d/Ra
+			temp_a *= temp_a; // (1-d/Ra)^2 
+			temp_a *= membrane_adhesion_factor;
 			// temp_r *= -1;
-			axpy(&(pCell->velocity), temp_r , normal);
+
+			if (displacement > -R ) // repulsion
+			{
+				temp_r = displacement;
+				temp_r /= R; // d/R
+				temp_r += 1.0; // 1-d/R 
+				temp_r *= temp_r; // (1-d/R)^2 
+				temp_r *= membrane_repulsion_factor;
+				temp_a -= temp_r;
+			}
+
+			axpy(&(pCell->velocity), temp_a , normal);
 		}
 		else 
 		{
 			// if crosses the barrier, then zoom it back inside
 			// std::cout << "crossed the membrane, pushing back in " << pCell->ID << std::endl; 
-			pCell->custom_data[attach_to_BM_i] == 0.0;
+			pCell->custom_data[attach_to_BM_i] = 0.0;
 			pCell->custom_data[attach_time_i] = 0.0;
 			dv *= 1000;
 			axpy(&(pCell->velocity), dv , normal);
@@ -557,30 +484,21 @@ void custom_cell_update_mechanics( Cell* pCell , Phenotype& phenotype , double d
 			
 
 			axpy(&(pCell->velocity), temp_r , normal);
-            // phenotype.motility.is_motile = false; 
+            
         }
-		// else if (displacement <= 0.0 && displacement < -adhesion_radius ) 
-		// {
-			
-		// }
+		
 		
 	}
 
-		// double temp_r;
-		// double R = pCell->phenotype.geometry.radius * 2;
 
-		temp_r = 1; // 1
-		temp_r /= displacement; // 1/d
-		temp_r *= membrane_repulsion_factor;
-		// push the current cell away
-		// disabling force due to linkage
-		axpy(&(pCell->velocity), temp_r , normal);
-
-
-	if (pCell->custom_data[attach_time_i] > pCell->custom_data[attach_lifetime_i])
+	if (pCell->custom_data[attach_to_BM_i] == 1.0 && pCell->custom_data[attach_time_i] > pCell->custom_data[attach_lifetime_i])
 	{
-		pCell->custom_data[attach_to_BM_i] == 0.0;
+		pCell->custom_data[attach_to_BM_i] = 0.0;
 		pCell->custom_data[attach_time_i] = 0.0;
+		static int spring_break_push_index = pCell->custom_data.find_variable_index("spring_break_push");
+		double spring_break_push = pCell->custom_data[spring_break_push_index];
+		// due to spring linkage breaking, a push in opposite direction
+		axpy(&(pCell->velocity), spring_break_push , normal);
 		return;
 	}
 
